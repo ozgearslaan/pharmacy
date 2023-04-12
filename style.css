@@ -1,0 +1,33 @@
+
+html,body {
+    height: 100%;
+    margin:0px 0px 0px 0px;
+    background-color: rgb(83, 26, 26);
+    }
+  .parent {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    }
+  .child-top {
+    flex: 0 1 50px;
+    background-color:rgb(100, 82, 82);
+    color: white;
+    }
+  .child-bottom {
+    flex: 1 1 auto;
+    }
+  #txtboxes {
+    display: inline-block;
+    text-align: right;
+    width: 95%;
+    font-size: 15px;
+    }
+  #txtboxes2 {
+    display: inline-block;
+    text-align: center;
+    width: 100%;
+    font-size: 22px;
+    }
+
+  

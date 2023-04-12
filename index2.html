@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Pharmacy Duties</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css"/>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet-src.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script> 
+    <script>
+        function populateCities(citiesSelectBoxOptions){
+            document.getElementById("iladi").innerHTML = citiesSelectBoxOptions;
+        }
+
+        function httpGetAsync(theUrl, callback)
+        {
+            alert(theUrl);
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function() {
+                if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                    callback(xmlHttp.responseText);
+            }
+            xmlHttp.open("GET", theUrl, true); // true for asynchronous
+            xmlHttp.send(null);
+        }
+    </script>
+    </head>
+  <body>
+    
+    <div class="parent">
+      <div class="child-top" id="panel" >
+		
+        <div id="txtboxes2" > Pharmacy Duties
+		
+          <div id="txtboxes">
+		
+            Select on click within
+            <select id="meters">
+              <option value="250">250 Meters</option>
+              <option value="500">500 Meters</option>
+              <option value="1500">1500 Meters</option>
+              <option value="3000">3000 Meters</option>
+              <option value="5000">5000 Meters</option>
+            </select>
+		<select name="ilid" id="ilid" onchange="httpGetAsync('get.php?ilid=' + this.options[this.selectedIndex].value, populateCities)">
+    		   <option value="Country1">Country 1</option>
+    		   <option value="Country2">Country 2</option>
+		</select>
+
+		<select name="city" id="city">
+
+          </div>
+        </div>
+      </div>
+    </div>
+      <div class="child-bottom" id="map"></div>
+ 
+    <script>
+      var theMarker;
+      var theCircle;
+      var geojsonLayer;
+
+      var map = L.map("map").setView([39.02771, 36], 6);
+
+      var osm = new L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      sites = L.geoJson(null, {
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, {
+            radius: 4,
+            color: "red",
+            stroke: true,
+            weight: 7,
+            fillOpcaity: 1,
+          });
+        },
+
+        onEachFeature: function (feature, layer) {
+          layer.bindTooltip(feature.properties.eczaneadi + '</br>' + 'ECZANE' +'</br>'+feature.properties.eczaneilceadi+'</br>'
+          +feature.properties.eczaneadres+'</br>'+ feature.properties.baslangic+'</br>'+feature.properties.bitis);
+
+          layer.on("click", function (e) {
+            lat = e.latlng.lat;
+            lon = e.latlng.lng;
+            ProcessClick(lat, lon);
+          });
+        },
+      });
+
+      $.getJSON("get_info_bugun.php", function (data) {
+        sites.addData(data);
+      });
+
+      sites2 = L.geoJson(null, {
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, {
+            radius: 4,
+            color: "red",
+            stroke: true,
+            weight: 7,
+            fillOpcaity: 1,
+          });
+        },
+
+        onEachFeature: function (feature, layer2) {
+          layer2.bindTooltip(feature.properties.eczaneadi + '</br>' + 'ECZANE' +'</br>'+feature.properties.eczaneilceadi+'</br>'+feature.properties.eczaneadres+'</br>'+ feature.properties.baslangic+'</br>'+feature.properties.bitis);
+
+          layer2.on("click", function (e) {
+            lat = e.latlng.lat;
+            lon = e.latlng.lng;
+            ProcessClick(lat, lon);
+          });
+        },
+      });
+
+      $.getJSON("dun_nobetci.json", function (data) {
+        sites2.addData(data);
+      });
+
+      sites3 = L.geoJson(null, {
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, {
+            radius: 4,
+            color: "red",
+            stroke: true,
+            weight: 7,
+            fillOpcaity: 1,
+          });
+        },
+
+        onEachFeature: function (feature, layer3) {
+          layer3.bindTooltip(feature.properties.eczaneadi + '</br>' + 'ECZANE' +'</br>'+feature.properties.eczaneilceadi+'</br>'+feature.properties.eczaneadres+'</br>'+ feature.properties.baslangic+'</br>'+feature.properties.bitis);
+
+          layer3.on("click", function (e) {
+            lat = e.latlng.lat;
+            lon = e.latlng.lng;
+            ProcessClick(lat, lon);
+          });
+        },
+      });
+
+      $.getJSON("yarin_nobetci.json", function (data) {
+        sites3.addData(data);
+      });
+
+
+      var baseMaps = {
+        "Open StreetMap": osm,
+      };
+
+      var overlayMaps = {
+        Bugun: sites,
+        Dun : sites2,
+        Yarin : sites3,
+      };
+
+      L.control.layers(baseMaps,overlayMaps).addTo(map);
+
+      map.on("click", function (e) {
+        lat = e.latlng.lat;
+        lon = e.latlng.lng;
+        ProcessClick(lat, lon);
+      });
+    
+      function ProcessClick(lat, lon) {
+        console.log("You clicked the map at LAT: " + lat + " and LONG: " + lon);
+        if (theCircle != undefined) {
+          map.removeLayer(theCircle);
+        }
+        if (theMarker != undefined) {
+          map.removeLayer(theMarker);
+        }
+        if (geojsonLayer != undefined) {
+          map.removeLayer(geojsonLayer);
+        }
+
+        theMarker = L.marker([lat, lon]).addTo(map);
+        SelectPoints(lat, lon);
+      }
+
+      var selPts = [];
+
+      function SelectPoints(lat, lon) {
+        var dist = document.getElementById("meters").value;
+
+        xy = [lat, lon];
+
+        var theRadius = parseInt(dist) * 1 ;
+
+        selPts.length = 0;
+
+        sites.eachLayer(function (layer) {
+          layer_lat_long = layer.getLatLng();
+
+          distance_from_centerPoint = layer_lat_long.distanceTo(xy);
+
+          if (distance_from_centerPoint <= theRadius) {
+            selPts.push(layer.feature);
+          }
+          
+        });
+        sites2.eachLayer(function (layer2) {
+          layer_lat_long = layer2.getLatLng();
+
+          distance_from_centerPoint = layer_lat_long.distanceTo(xy);
+
+          if (distance_from_centerPoint <= theRadius) {
+            selPts.push(layer2.feature);
+          }
+        });
+        sites3.eachLayer(function (layer3) {
+          layer_lat_long = layer3.getLatLng();
+
+          distance_from_centerPoint = layer_lat_long.distanceTo(xy);
+
+          if (distance_from_centerPoint <= theRadius) {
+            selPts.push(layer3.feature);
+          }
+        });
+
+        
+        theCircle = L.circle(xy, theRadius, {
+          color: "purple",
+          fillOpacity: 0,
+          opacity: 5,
+        }).addTo(map);
+
+        geojsonLayer = L.geoJson(selPts, {
+          pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, {
+              radius: 4,
+              color: "green",
+              stroke: true,
+              weight: 7,
+              fillOpcaity: 1,
+            });
+          },
+          onEachFeature: function (feature, layer) {
+          layer.bindTooltip(feature.properties.eczaneadi + '</br>' + 'ECZANE' +'</br>'+feature.properties.eczaneilceadi+'</br>'+feature.properties.eczaneadres+'</br>'+ feature.properties.baslangic+'</br>'+feature.properties.bitis);
+
+          layer.on("click", function (e) {
+            lat = e.latlng.lat;
+            lon = e.latlng.lng;
+            ProcessClick(lat, lon);
+          });
+        },
+        });
+        map.addLayer(geojsonLayer);
+        var GeoJS = { type: "FeatureCollection", features: selPts };
+        console.log(GeoJS.features.length + " Selected features");
+        console.log(JSON.stringify(GeoJS));
+      }
+
+
+      L.Control.geocoder().addTo(map);
+
+    </script>
+
+  </body>
+</html>
